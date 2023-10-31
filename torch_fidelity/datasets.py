@@ -6,9 +6,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, STL10, CIFAR100
 import torchvision.transforms.functional as F
-
+import albumentations
 from torch_fidelity.helpers import vassert
-
+import numpy as np
 
 class TransformPILtoRGBTensor:
     def __call__(self, img):
@@ -17,19 +17,40 @@ class TransformPILtoRGBTensor:
 
 
 class ImagesPathDataset(Dataset):
-    def __init__(self, files, transforms=None):
+    def __init__(self, files, transforms=None,npf = False):
         self.files = files
         self.transforms = TransformPILtoRGBTensor() if transforms is None else transforms
-
+        self.npf = npf
+        if self.npf:
+            self.size = 256
+            self.rescaler = albumentations.SmallestMaxSize(max_size = self.size)
+            if True:#not self.random_crop:
+                self.cropper = albumentations.CenterCrop(height=self.size,width=self.size)
+            else:
+                self.cropper = albumentations.RandomCrop(height=self.size,width=self.size)
+            self.preprocessor = albumentations.Compose([self.rescaler, self.cropper])
+        
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, i):
         path = self.files[i]
-        img = Image.open(path).convert('RGB')
-        img = self.transforms(img)
+        if self.npf:
+            img = self.preprocess_image(path)
+        else:
+            img = Image.open(path).convert('RGB')
+            img = self.transforms(img)
         return img
-
+    
+    def preprocess_image(self, image_path):
+        image = np.load(image_path).squeeze(0)  # 3 x 1024 x 1024
+        # image = np.transpose(image, (1,2,0))
+        image = Image.fromarray(image, mode="RGB")
+        image = np.array(image).astype(np.uint8)
+        image = self.preprocessor(image=image)["image"]
+        image = (image/127.5 - 1.0).astype(np.float32)
+        image = torch.from_numpy(image)
+        return image
 
 class Cifar10_RGB(CIFAR10):
     def __init__(self, *args, **kwargs):

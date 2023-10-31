@@ -253,7 +253,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
                 ]
             transforms.append(TransformPILtoRGBTensor())
             transforms = torchvision.transforms.Compose(transforms)
-            input = ImagesPathDataset(input, transforms)
+            input = ImagesPathDataset(input, transforms,samples_find_ext == 'npz')
         elif os.path.isfile(input) and input.endswith('.onnx'):
             input = GenerativeModelONNX(
                 input,
