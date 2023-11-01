@@ -17,10 +17,10 @@ class TransformPILtoRGBTensor:
 
 
 class ImagesPathDataset(Dataset):
-    def __init__(self, files, transforms=None,npf = False):
+    def __init__(self, files, transforms=None):
         self.files = files
         self.transforms = TransformPILtoRGBTensor() if transforms is None else transforms
-        self.npf = npf
+        self.npf = files[0].strip().endswith(".npy")
         if self.npf:
             self.size = 256
             self.rescaler = albumentations.SmallestMaxSize(max_size = self.size)
@@ -44,11 +44,12 @@ class ImagesPathDataset(Dataset):
     
     def preprocess_image(self, image_path):
         image = np.load(image_path).squeeze(0)  # 3 x 1024 x 1024
-        # image = np.transpose(image, (1,2,0))
+        image = np.transpose(image, (1,2,0))
         image = Image.fromarray(image, mode="RGB")
         image = np.array(image).astype(np.uint8)
         image = self.preprocessor(image=image)["image"]
-        image = (image/127.5 - 1.0).astype(np.float32)
+        #image = (image/127.5 - 1.0).astype(np.float32)
+        image = np.transpose(image, (2,0,1))
         image = torch.from_numpy(image)
         return image
 
