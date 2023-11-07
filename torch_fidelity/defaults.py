@@ -39,9 +39,9 @@ DEFAULTS = {
     'samples_resize_and_crop': 0,
     'datasets_root': None,
     'datasets_download': True,
-    'cache_root': None,
+    'cache_root': "~/.cache",
     'cache': True,
-    'input1_cache_name': None,
+    'input1_cache_name': "inp1",
     'input1_model_z_type': 'normal',
     'input1_model_z_size': None,
     'input1_model_num_classes': 0,
@@ -53,5 +53,5 @@ DEFAULTS = {
     'input2_model_num_samples': None,
     'rng_seed': 2020,
     'save_cpu_ram': False,
-    'verbose': True,
+    'verbose': False,
 }
